@@ -30,8 +30,8 @@ def aes_decrypt_file(f_name, key, mode=modes.GCM):
         text = f.read()
 
         salt = text[0:SALT_LEN]
-        iv = text[SALT_LEN:SALT_LEN + IV_LEN]
-        tag = text[SALT_LEN + IV_LEN:SALT_LEN + TAG_LEN + IV_LEN]
+        tag = text[SALT_LEN:SALT_LEN + TAG_LEN]
+        iv = text[SALT_LEN + TAG_LEN:SALT_LEN + IV_LEN + TAG_LEN]
         cipher_text = text[SALT_LEN + IV_LEN + TAG_LEN:]
 
         key = derive_key(key.encode('utf-8'), salt)
@@ -73,11 +73,11 @@ def aes_encrypt_file(f_name, key, iv=os.urandom(IV_LEN), mode=modes.GCM):
         cipher_text = encryptor.update(f_text) + encryptor.finalize()
         with open(f_name + '.aes', 'wb') as o:
             # salt 16 bytes
-            # iv 12 bytes
             # tag 16 bytes
+            # iv 12 bytes
             o.write(salt)
-            o.write(iv)
             o.write(encryptor.tag)
+            o.write(iv)
             o.write(cipher_text)
 
 
@@ -107,8 +107,9 @@ def main():
         aes_encrypt_file(f_name=args.input,
                          key=args.key)
     else:
-        aes_decrypt_file(f_name=args.input,
-                         key=args.key)
+        with open("decrypted", "wb") as f:
+            f.write(aes_decrypt_file(f_name=args.input,
+                                     key=args.key))
 
 
 def parse_args(args):
